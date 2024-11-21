@@ -1,0 +1,42 @@
+name: On pull request
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Step 3: Install Dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 4: Run Black Linter
+      - name: Run Black Linter
+        run: make lint-check
+
+      # Step 5: Run Tests
+      - name: Run Tests
+        run: make test
+
+      # Step 6: Clean Up Artifacts
+      - name: Clean Up Artifacts
+        run: make clean

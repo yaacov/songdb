@@ -1,0 +1,5 @@
+sentence-transformers
+numpy
+faiss-cpu
+black
+pytest
