@@ -45,4 +45,4 @@ image:
 # Running a container image
 start-image:
 	@echo "Running a container image..."
-	podman run -p 8000:8000 -it quay.io/yaacov/songdb
+	podman run -rm -p 8000:8000 -it quay.io/yaacov/songdb
