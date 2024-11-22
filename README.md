@@ -12,6 +12,8 @@ project_root/
 │   ├── handlers.py
 ├── songs/
 │   ├── sample_songs.py
+├── static/
+│   ├── index.html
 ├── server.py
 ├── requirements.txt
 ├── key.pem
@@ -62,6 +64,9 @@ The server will start on port `8000` and will be accessible using HTTPS.
 
 ## Prefill the Database with Sample Songs
 The project includes an example file `songs/sample_songs.py` that contains a list of sample songs. When you run the server, the database will be prefilled with these songs automatically.
+
+## Demo HTML search
+For a demo search page, start the server and then open the page https://localhost:8000/ on a web btrowser.
 
 ## Example Usage
 ### Prefill the Database
