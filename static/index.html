@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Search</title>
+    <script type="module">
+        import { LitElement, html, css } from 'https://esm.sh/lit';
+
+        class DropdownComponent extends LitElement {
+            static properties = {
+                label: { type: String },
+                options: { type: Array },
+                id: { type: String },
+                value: { type: String }
+            };
+
+            constructor() {
+                super();
+                this.value = '';
+            }
+
+            static styles = css`
+                :host {
+                    display: block;
+                    margin-bottom: 15px;
+                }
+
+                label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: bold;
+                }
+
+                select {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+            `;
+
+            render() {
+                return html`
+                    <label for="${this.id}">${this.label}</label>
+                    <select id="${this.id}" @change="${this._onChange}">
+                        ${this.options.map(option => html`<option value="${option.value}">${option.label}</option>`)}
+                    </select>
+                `;
+            }
+
+            _onChange(event) {
+                this.value = event.target.value;
+            }
+        }
+        customElements.define('dropdown-component', DropdownComponent);
+
+        class InputComponent extends LitElement {
+            static properties = {
+                label: { type: String },
+                id: { type: String },
+                placeholder: { type: String },
+                value: { type: String }
+            };
+
+            constructor() {
+                super();
+                this.value = '';
+            }
+
+            static styles = css`
+                :host {
+                    display: block;
+                    margin-bottom: 15px;
+                }
+
+                label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: bold;
+                }
+
+                input {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+            `;
+
+            render() {
+                return html`
+                    <label for="${this.id}">${this.label}</label>
+                    <input type="text" id="${this.id}" placeholder="${this.placeholder}" @input="${this._onInput}" .value="${this.value}" />
+                `;
+            }
+
+            _onInput(event) {
+                this.value = event.target.value;
+            }
+        }
+        customElements.define('input-component', InputComponent);
+
+        class ResultsComponent extends LitElement {
+            static properties = {
+                results: { type: Array }
+            };
+
+            static styles = css`
+                .results {
+                    margin-top: 20px;
+                }
+
+                .result-item {
+                    padding: 10px;
+                    border-bottom: 1px solid #ccc;
+                }
+
+                .result-item:last-child {
+                    border-bottom: none;
+                }
+
+                strong {
+                    font-size: 1.1em;
+                }
+            `;
+
+            render() {
+                return html`
+                    <div class="results">
+                        ${this.results.length === 0
+                            ? html`<p>No results found</p>`
+                            : this.results.map(result => html`
+                                <div class="result-item">
+                                    <strong>${result.song}</strong> by ${result.artist}<br>
+                                    Album: ${result.album} (${result.year})<br>
+                                    Description: ${result.description}<br>
+                                    Similarity: ${result.similarity}<br>
+                                    <em>Hash:</em> ${result.hash}
+                                </div>
+                            `)}
+                    </div>
+                `;
+            }
+        }
+        customElements.define('results-component', ResultsComponent);
+
+        class SongSearch extends LitElement {
+            static styles = css`
+                :host {
+                    display: block;
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f9;
+                    padding: 20px;
+                }
+
+                .search-container {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+
+                button {
+                    margin-top: 10px;
+                    padding: 10px;
+                    border: none;
+                    border-radius: 4px;
+                    background-color: #007bff;
+                    color: white;
+                    cursor: pointer;
+                }
+
+                button:hover {
+                    background-color: #0056b3;
+                }
+
+                h2 {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            `;
+
+            static properties = {
+                results: { type: Array }
+            };
+
+            constructor() {
+                super();
+                this.results = [];
+            }
+
+            async searchSongs() {
+                const query = this.shadowRoot.querySelector('#query').value;
+                const artist = this.shadowRoot.querySelector('#artist').value;
+                const album = this.shadowRoot.querySelector('#album').value;
+                const year = this.shadowRoot.querySelector('#year').value;
+                const top_k = this.shadowRoot.querySelector('#top_k').value;
+
+                if (!query) {
+                    alert('Search query is required!');
+                    return;
+                }
+
+                const requestBody = {
+                    query,
+                    artist,
+                    album,
+                    year: year ? parseInt(year, 10) : null,
+                    top_k: top_k ? parseInt(top_k, 10) : 5
+                };
+
+                try {
+                    const response = await fetch('/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestBody),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch search results');
+                    }
+
+                    this.results = await response.json();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while searching for songs.');
+                }
+            }
+
+            render() {
+                return html`
+                    <div class="search-container">
+                        <h2>Audio hash Search</h2>
+                        <input-component id="query" label="Search Query" placeholder="Enter search query"></input-component>
+                        <dropdown-component id="artist" label="Artist (optional)" 
+                            .options=${[
+                                { value: '', label: 'Select Artist' },
+                                { value: 'אריק איינשטיין', label: 'אריק איינשטיין' },
+                                { value: 'שלום חנוך', label: 'שלום חנוך' },
+                                { value: 'יהודית רביץ', label: 'יהודית רביץ' },
+                                { value: 'משינה', label: 'משינה' },
+                                { value: 'ריטה', label: 'ריטה' },
+                                { value: 'עידן רייכל', label: 'עידן רייכל' },
+                                { value: 'אביב גפן', label: 'אביב גפן' },
+                                { value: 'נעמי שמר', label: 'נעמי שמר' }
+                            ]}></dropdown-component>
+                        <input-component id="album" label="Album (optional)" placeholder="Enter album"></input-component>
+                        <dropdown-component id="year" label="Year (optional)" 
+                            .options=${[
+                                { value: '', label: 'Select Year' },
+                                ...Array.from({ length: 2025 - 1967 + 1 }, (_, i) => 1967 + i)
+                                    .map(year => ({ value: year.toString(), label: year.toString() }))
+                            ]}></dropdown-component>
+                        <dropdown-component id="top_k" label="Top K Results" 
+                            .options=${[
+                                { value: '5', label: 'Top 5 results' },
+                                { value: '10', label: 'Top 10 results' },
+                                { value: '15', label: 'Top 15 results' },
+                                { value: '20', label: 'Top 20 results' }
+                            ]}></dropdown-component>
+                        <button @click="${this.searchSongs}">Search</button>
+                        <results-component .results="${this.results}"></results-component>
+                    </div>
+                `;
+            }
+        }
+
+        customElements.define('song-search', SongSearch);
+    </script>
+</head>
+<body>
+    <song-search></song-search>
+</body>
+</html>

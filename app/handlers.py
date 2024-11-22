@@ -1,8 +1,10 @@
 import json
+import mimetypes
+import os
 import sqlite3
 import numpy as np
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import unquote, urlparse, parse_qs
 from app.db import generate_song_hash, get_connection
 from app.embeddings import generate_embedding, perform_faiss_similarity_search
 
@@ -22,10 +24,39 @@ class SongRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed_path = urlparse(self.path)
-        if parsed_path.path == "/song":
+        file_path = unquote(parsed_path.path.lstrip("/"))
+
+        if parsed_path.path == "/":
+            # Serve the static index.html for the root path
+            file_path = "static/index.html"
+        else:
+            # Prepend static directory to look for files
+            file_path = os.path.join("static", file_path)
+
+        # Check if the file exists and serve it
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            self.serve_file(file_path)
+        elif parsed_path.path == "/song":
+            # Handle specific /song endpoint
             self.handle_get_song()
         else:
-            self.send_error(404, "Endpoint not found")
+            # File not found, return 404
+            self.send_error(404, "File not found")
+
+    def serve_file(self, file_path):
+        """Serve a static file."""
+        content_type, _ = mimetypes.guess_type(file_path)
+        if not content_type:
+            content_type = "text/html"
+        
+        try:
+            with open(file_path, "rb") as file:
+                self.send_response(200)
+                self.send_header("Content-type", content_type)
+                self.end_headers()
+                self.wfile.write(file.read())
+        except Exception as e:
+            self.send_error(500, f"Error serving file: {e}")
 
     def do_DELETE(self):
         parsed_path = urlparse(self.path)
