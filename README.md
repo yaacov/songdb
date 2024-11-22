@@ -1,6 +1,6 @@
 # Songs Database
 
-This project provides a simple HTTP server that allows you to manage a songs database using an HTTPS REST API. The server supports adding, retrieving, searching, and deleting songs from the database. Songs are stored with metadata, and a similarity search feature is included to find related songs.
+This project provides a simple HTTP server that allows you to manage a songs database through an HTTPS REST API. The server supports adding, retrieving, searching, and deleting songs from the database, with metadata stored for each song. It also includes a similarity search feature and supports natural language searches powered by sentence transformers and FAISS to find related songs easily.
 
 ## Project Structure
 ```
