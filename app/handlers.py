@@ -48,7 +48,7 @@ class SongRequestHandler(BaseHTTPRequestHandler):
         content_type, _ = mimetypes.guess_type(file_path)
         if not content_type:
             content_type = "text/html"
-        
+
         try:
             with open(file_path, "rb") as file:
                 self.send_response(200)
